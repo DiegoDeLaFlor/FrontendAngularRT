@@ -1,0 +1,108 @@
+<div class="page-header">
+  <h1>Divisiones</h1>
+</div>
+
+<div class="content-container">
+  <div class="table-operations">
+    <nz-input-group [nzSuffix]="suffixIcon">
+      <input
+        type="text"
+        nz-input
+        placeholder="Buscar división"
+        [(ngModel)]="searchValue"
+        (ngModelChange)="search()"
+      />
+    </nz-input-group>
+    <ng-template #suffixIcon>
+      <button nz-button nzType="text" (click)="reset()">
+        <span nz-icon nzType="reload"></span>
+      </button>
+    </ng-template>
+  </div>
+
+  <nz-table
+  #basicTable
+  [nzBordered]="true"
+  [nzData]="tableData"
+  [nzLoading]="loading"
+  [nzSize]="'middle'"
+  [nzPageSize]="10"
+  [nzShowSizeChanger]="true"
+  [nzShowQuickJumper]="true"
+  [nzScroll]="{ x: '1000px' }"
+  class="table-striped-rows"
+  >
+  <thead>
+    <tr>
+      <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('name')">
+        División
+      </th>
+      <th>División Superior</th>
+      <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('collaborators')">
+        Colaboradores
+      </th>
+      <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('level')">
+        Nivel
+      </th>
+      <th>Subdivisiones</th>
+      <th>Embajadores</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let division of tableData">
+      <td>{{ division.name }}</td>
+      <td>{{ division.upperDivisionName || 'N/A' }}</td>
+      <td>{{ division.collaborators }}</td>
+      <td>{{ division.level }}</td>
+      <td>{{ division.subdivisions }}</td>
+      <td>{{ division.ambassadorName || 'N/A' }}</td>
+      <td>
+        <!--<button nz-button nzType="link" (click)="editDivision(division)">Editar</button>-->
+        <button nz-button nzType="link" nzDanger (click)="deleteDivision(division.id)">Eliminar</button>
+      </td>
+    </tr>
+  </tbody>
+</nz-table>
+
+  <nz-modal
+    [(nzVisible)]="isModalVisible"
+    [nzTitle]="isEditing ? 'Editar División' : 'Nueva División'"
+    (nzOnCancel)="closeModal()"
+    (nzOnOk)="saveDivision()"
+  >
+    <form nz-form [formGroup]="divisionForm">
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6">Nombre</nz-form-label>
+        <nz-form-control [nzSpan]="14">
+          <input nz-input formControlName="name" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6">División Superior</nz-form-label>
+        <nz-form-control [nzSpan]="14">
+          <nz-select formControlName="upperDivisionId">
+            <nz-option
+              *ngFor="let division of divisions"
+              [nzValue]="division.id"
+              [nzLabel]="division.name"
+            ></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6">Colaboradores</nz-form-label>
+        <nz-form-control [nzSpan]="14">
+          <input nz-input type="number" formControlName="collaborators" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6">Embajador</nz-form-label>
+        <nz-form-control [nzSpan]="14">
+          <input nz-input formControlName="ambassadorName" />
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </nz-modal>
+</div>
+
