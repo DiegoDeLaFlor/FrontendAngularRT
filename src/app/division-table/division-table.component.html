@@ -1,5 +1,5 @@
 <div class="page-header">
-  <h1>Divisiones</h1>
+  <h1>Organizacíon</h1>
 </div>
 
 <div class="content-container">
@@ -14,12 +14,10 @@
       />
     </nz-input-group>
     <ng-template #suffixIcon>
-      <button nz-button nzType="text" (click)="reset()">
-        <span nz-icon nzType="reload"></span>
-      </button>
+        <span nz-icon nzType="search" nzTheme="outline"></span>
     </ng-template>
   </div>
-
+  
   <nz-table
   #basicTable
   [nzBordered]="true"
@@ -52,13 +50,16 @@
   <tbody>
     <tr *ngFor="let division of tableData">
       <td>{{ division.name }}</td>
-      <td>{{ division.upperDivisionName || 'N/A' }}</td>
+      <td>
+        <span *ngIf="!division.upperDivisionName"><b>Visma Static</b></span>
+        <span *ngIf="division.upperDivisionName">{{ division.upperDivisionName }}</span>
+      </td>
       <td>{{ division.collaborators }}</td>
       <td>{{ division.level }}</td>
       <td>{{ division.subdivisions }}</td>
-      <td>{{ division.ambassadorName || 'N/A' }}</td>
+      <td>{{ division.ambassadorName || '-' }}</td>
       <td>
-        <!--<button nz-button nzType="link" (click)="editDivision(division)">Editar</button>-->
+        <!-- <button nz-button nzType="link" (click)="editDivision(division)">Editar</button> -->
         <button nz-button nzType="link" nzDanger (click)="deleteDivision(division.id)">Eliminar</button>
       </td>
     </tr>

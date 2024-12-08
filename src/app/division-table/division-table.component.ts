@@ -59,17 +59,27 @@ export class DivisionTableComponent implements OnInit {
 
   loadDivisions() {
     this.loading = true;
-    this.divisionService.getDivisions().subscribe((data) => {
-      this.divisions = data.map((division) => ({
-        ...division,
-        subdivisions: data.filter((d) => d.upperDivisionId === division.id).length,
-        upperDivisionName: data.find((d) => d.id === division.upperDivisionId)?.name || null,
-      }));
-      this.tableData = [...this.divisions];
-      this.loading = false;
-    });
-  }
+    this.divisionService.getDivisions().subscribe((response) => {
 
+        // 'results' contiene el array de divisiones
+        const data = response.results;
+
+        this.divisions = data.map((division) => ({
+            ...division,
+            subdivisions: data.filter((d) => d.upperDivision?.id === division.id).length,
+            upperDivisionName: division.upperDivision?.name || null,
+        }));
+
+        this.tableData = [...this.divisions];
+        
+        this.loading = false;
+    }, (error) => {
+        console.error("Error al cargar divisiones", error);
+        this.loading = false;
+    });
+}
+
+  /*
   openModal(isEditing = false, division: any = null) {
     this.isEditing = isEditing;
     this.isModalVisible = true;
@@ -81,6 +91,7 @@ export class DivisionTableComponent implements OnInit {
       this.divisionForm.reset();
     }
   }
+  */
 
   closeModal() {
     this.isModalVisible = false;
@@ -109,6 +120,7 @@ export class DivisionTableComponent implements OnInit {
       });
     }
   }
+
   search() {
     if (!this.searchValue) {
       this.tableData = [...this.divisions]; 
@@ -123,13 +135,17 @@ export class DivisionTableComponent implements OnInit {
       );
     });
   }
+
   reset() {
     this.searchValue = '';
     this.search();
   }
+
   onQueryParamsChange(params: any): void {
     const { pageSize, pageIndex } = params;
     this.pagination = { pageSize, pageIndex };
+
+    this.loadDivisions();
   }
 
   onSort(sort: any): void {

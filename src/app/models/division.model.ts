@@ -1,13 +1,32 @@
 export interface Division {
     id: number;
     name: string;
-    upperDivisionId: number | null;
-    collaborators: number;
     level: number;
+    collaborators: number;
     ambassadorName: string | null;
+    created_at: string;
+    updated_at: string;
+    upperDivision?: UpperDivision | null;
 }
 
 export interface DivisionWithSubdivisions extends Division {
     subdivisions: number;
     upperDivisionName?: string | null;
+}
+
+export interface DivisionsResponse {
+    results: Division[];
+    total: number;
+    page: number;
+    limit: number;
+}
+
+export interface UpperDivision {
+    id: number;
+    name: string;
+    level: number;
+    collaborators: number;
+    ambassadorName: string | null;
+    created_at: string;
+    updated_at: string;
 }
