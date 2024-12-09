@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Division, DivisionsResponse } from '../models/division.model';
+import { Division, DivisionPayload, DivisionsResponse } from '../models/division.model';
 
 @Injectable({
 providedIn: 'root',
@@ -15,7 +15,7 @@ getDivisions(page:number,limit:number): Observable<DivisionsResponse> {
     return this.http.get<DivisionsResponse>(`${this.apiUrl}?page=${page}&limit=${limit}`);
 }
 
-createDivision(data: Division): Observable<Division> {
+createDivision(data: DivisionPayload): Observable<Division> {
     return this.http.post<Division>(this.apiUrl, data);
 }
 

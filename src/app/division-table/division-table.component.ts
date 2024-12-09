@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DivisionService } from '../services/division.service';	
 import { DivisionWithSubdivisions } from '../models/division.model';
 import { CommonModule } from '@angular/common';
@@ -11,6 +11,7 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { ChangeDetectorRef } from '@angular/core';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
 @Component({
   selector: 'app-division-table',
   standalone: true,
@@ -24,7 +25,8 @@ import { ChangeDetectorRef } from '@angular/core';
     NzModalModule,
     NzFormModule,
     NzSelectModule,
-    NzPaginationModule
+    NzPaginationModule,
+    NzTabsModule
   ],
   templateUrl: './division-table.component.html',
   styleUrls: ['./division-table.component.scss'],
@@ -50,8 +52,8 @@ export class DivisionTableComponent implements OnInit {
 
   constructor(private divisionService: DivisionService, private fb: FormBuilder, private cdr: ChangeDetectorRef) {
     this.divisionForm = this.fb.group({
-      name: [''],
-      upperDivisionId: [null],
+      name: ['', Validators.required],
+      upperDivisionId: [null, Validators.required],
       collaborators: [0],
       ambassadorName: [''],
     });
@@ -113,6 +115,9 @@ export class DivisionTableComponent implements OnInit {
 
   saveDivision() {
     const formData = this.divisionForm.value;
+    formData.level = Math.floor(Math.random() * 10) + 1; // Nivel entre 1 y 10
+    formData.collaborators = Math.floor(Math.random() * 10) + 1; // Colaboradores entre 1 y 10
+    console.log('Form Data:', formData);
     if (this.isEditing && this.currentEditingId) {
       this.divisionService.updateDivision(this.currentEditingId, formData).subscribe(() => {
         this.loadDivisions();
@@ -172,7 +177,7 @@ export class DivisionTableComponent implements OnInit {
     this.updateCheckedSet(id, checked);
     this.refreshCheckedStatus();
   }
-  
+
   onAllChecked(value: boolean): void {
     this.divisions.forEach(item => this.updateCheckedSet(item.id, value));
     this.refreshCheckedStatus();
