@@ -10,7 +10,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzPaginationModule } from 'ng-zorro-antd/pagination';
-
+import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-division-table',
   standalone: true,
@@ -38,13 +38,17 @@ export class DivisionTableComponent implements OnInit {
   divisionForm: FormGroup;
   currentEditingId: number | null = null;
   searchValue = '';
+  setOfCheckedId = new Set<number>();
+  checked = false;
+  indeterminate = false;
   sortMap = new Map<string, 'ascend' | 'descend' | null>();
   pagination = {
+    pageIndex: 1,
     pageSize: 10,
-    pageIndex: 1
   };
+  total = 0;
 
-  constructor(private divisionService: DivisionService, private fb: FormBuilder) {
+  constructor(private divisionService: DivisionService, private fb: FormBuilder, private cdr: ChangeDetectorRef) {
     this.divisionForm = this.fb.group({
       name: [''],
       upperDivisionId: [null],
@@ -59,27 +63,37 @@ export class DivisionTableComponent implements OnInit {
 
   loadDivisions() {
     this.loading = true;
-    this.divisionService.getDivisions().subscribe((response) => {
-
-        // 'results' contiene el array de divisiones
-        const data = response.results;
-
-        this.divisions = data.map((division) => ({
+    this.divisionService.getDivisions(this.pagination.pageIndex, this.pagination.pageSize)
+      .subscribe({
+        next: (response) => {
+          this.divisions = response.results.map(division => ({
             ...division,
-            subdivisions: data.filter((d) => d.upperDivision?.id === division.id).length,
+            subdivisions: response.results.filter(d => d.upperDivision?.id === division.id).length,
             upperDivisionName: division.upperDivision?.name || null,
-        }));
+          }));
+  
+          this.tableData = [...this.divisions];
+          
+          this.pagination.pageIndex = response.page;
+          this.pagination.pageSize = response.limit;
+          this.total = response.total;
+  
+          console.log('Pagination Debug:', {
+            pageIndex: this.pagination.pageIndex,
+            pageSize: this.pagination.pageSize,
+            total: this.total
+          });
+  
+          this.loading = false;
+          
+        },
+        error: (error) => {
+          console.error("Error al cargar divisiones", error);
+          this.loading = false;
+        }
+      });
+  }
 
-        this.tableData = [...this.divisions];
-        
-        this.loading = false;
-    }, (error) => {
-        console.error("Error al cargar divisiones", error);
-        this.loading = false;
-    });
-}
-
-  /*
   openModal(isEditing = false, division: any = null) {
     this.isEditing = isEditing;
     this.isModalVisible = true;
@@ -91,7 +105,6 @@ export class DivisionTableComponent implements OnInit {
       this.divisionForm.reset();
     }
   }
-  */
 
   closeModal() {
     this.isModalVisible = false;
@@ -141,19 +154,40 @@ export class DivisionTableComponent implements OnInit {
     this.search();
   }
 
-  onQueryParamsChange(params: any): void {
-    const { pageSize, pageIndex } = params;
-    this.pagination = { pageSize, pageIndex };
-
+  onQueryParamsChange(params: { pageIndex: number; pageSize: number }): void {
+    this.pagination.pageIndex = params.pageIndex;
+    this.pagination.pageSize = params.pageSize;
     this.loadDivisions();
   }
 
   onSort(sort: any): void {
-      //console.log(sort);
         if(sort.value === null){
             this.sortMap.delete(sort.key);
         }else{
             this.sortMap.set(sort.key, sort.value);
         }
+  }
+ // selector
+  onItemChecked(id: number, checked: boolean): void {
+    this.updateCheckedSet(id, checked);
+    this.refreshCheckedStatus();
+  }
+  
+  onAllChecked(value: boolean): void {
+    this.divisions.forEach(item => this.updateCheckedSet(item.id, value));
+    this.refreshCheckedStatus();
+  }
+
+  refreshCheckedStatus(): void {
+    this.checked = this.divisions.every(item => this.setOfCheckedId.has(item.id));
+    this.indeterminate = this.divisions.some(item => this.setOfCheckedId.has(item.id)) && !this.checked;
+  }
+  
+  updateCheckedSet(id: number, checked: boolean): void {
+    if (checked) {
+      this.setOfCheckedId.add(id);
+    } else {
+      this.setOfCheckedId.delete(id);
+    }
   }
 }

@@ -15,7 +15,7 @@ export interface DivisionWithSubdivisions extends Division {
 }
 
 export interface DivisionsResponse {
-    results: Division[];
+    results: DivisionWithSubdivisions[];
     total: number;
     page: number;
     limit: number;

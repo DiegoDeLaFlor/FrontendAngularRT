@@ -1,5 +1,22 @@
 <div class="page-header">
-  <h1>Organizacíon</h1>
+  <h1 class="page-name">Organización</h1>
+  <div class="table-controls">
+    <div class="right-controls">
+      <button nz-button nzType="primary">
+        <i nz-icon nzType="plus"></i>
+      </button>
+      <button nz-button>
+        <i nz-icon nzType="upload"></i>
+      </button>
+      <button nz-button>
+        <i nz-icon nzType="download"></i>
+      </button>
+    </div>
+  </div>
+  <div class="page-links">
+    <a routerLink="/divisions" routerLinkActive="active">Divisiones</a> | 
+    <a routerLink="/colaboraters" routerLinkActive="active">Colaboradores</a>
+  </div>
 </div>
 
 <div class="content-container">
@@ -8,7 +25,7 @@
       <input
         type="text"
         nz-input
-        placeholder="Buscar división"
+        placeholder="Buscar"
         [(ngModel)]="searchValue"
         (ngModelChange)="search()"
       />
@@ -19,52 +36,76 @@
   </div>
   
   <nz-table
-  #basicTable
-  [nzBordered]="true"
-  [nzData]="tableData"
-  [nzLoading]="loading"
-  [nzSize]="'middle'"
-  [nzPageSize]="10"
-  [nzShowSizeChanger]="true"
-  [nzShowQuickJumper]="true"
-  [nzScroll]="{ x: '1000px' }"
-  class="table-striped-rows"
-  >
-  <thead>
-    <tr>
-      <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('name')">
-        División
-      </th>
-      <th>División Superior</th>
-      <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('collaborators')">
-        Colaboradores
-      </th>
-      <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('level')">
-        Nivel
-      </th>
-      <th>Subdivisiones</th>
-      <th>Embajadores</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let division of tableData">
-      <td>{{ division.name }}</td>
-      <td>
-        <span *ngIf="!division.upperDivisionName"><b>Visma Static</b></span>
-        <span *ngIf="division.upperDivisionName">{{ division.upperDivisionName }}</span>
-      </td>
-      <td>{{ division.collaborators }}</td>
-      <td>{{ division.level }}</td>
-      <td>{{ division.subdivisions }}</td>
-      <td>{{ division.ambassadorName || '-' }}</td>
-      <td>
-        <!-- <button nz-button nzType="link" (click)="editDivision(division)">Editar</button> -->
-        <button nz-button nzType="link" nzDanger (click)="deleteDivision(division.id)">Eliminar</button>
-      </td>
-    </tr>
-  </tbody>
-</nz-table>
+    #rowSelectionTable
+    [nzBordered]="true"
+    [nzData]="tableData"
+    [nzLoading]="loading"
+    [nzSize]="'small'"
+    [nzFrontPagination]="false"
+    [nzScroll]="{ x: '1000px' }"
+    class="table-striped-rows"
+    >
+    <thead class="table-header">
+      <tr>
+        <th
+          [(nzChecked)]="checked"
+          [nzIndeterminate]="indeterminate"
+          (nzCheckedChange)="onAllChecked($event)"
+        ></th>
+        <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('name')">
+          División
+        </th>
+        <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('upperDivisionName')">
+          División Superior
+        </th>
+        <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('collaborators')">
+          Colaboradores
+        </th>
+        <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('level')">
+          Nivel
+        </th>
+        <th nzShowSort [(nzSortOrder)]="sortMap.get.name" (nzSortChange)="onSort('subdivisions')">
+          Subdivisiones
+        </th>
+        <th>Embajadores</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let division of tableData">
+        <td
+          [(nzChecked)]="checked"
+          [nzIndeterminate]="indeterminate"
+          (nzCheckedChange)="onAllChecked($event)"
+        ></td>
+        <td>{{ division.name }}</td>
+        <td>
+          <span *ngIf="!division.upperDivisionName"><b>Visma Static</b></span>
+          <span *ngIf="division.upperDivisionName">{{ division.upperDivisionName }}</span>
+        </td>
+        <td>{{ division.collaborators }}</td>
+        <td>{{ division.level }}</td>
+        <td>{{ division.subdivisions }}</td>
+        <td>{{ division.ambassadorName || '-' }}</td>
+        <td>
+          <!-- <button nz-button nzType="link" (click)="editDivision(division)">Editar</button> -->
+          <button nz-button nzType="link" nzDanger (click)="deleteDivision(division.id)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+  <div class="table-footer">  
+    <div class="total-collaborators">Total colaboradores: {{ total }}</div> 
+    <nz-pagination
+      [(nzPageIndex)]="pagination.pageIndex"
+      [(nzPageSize)]="pagination.pageSize"  
+      [nzShowSizeChanger]="true"  
+      [nzTotal]="total"    
+      (nzPageIndexChange)="onQueryParamsChange({ pageIndex: $event, pageSize: pagination.pageSize })"    
+      (nzPageSizeChange)="onQueryParamsChange({ pageIndex: pagination.pageIndex, pageSize: $event })"
+    >
+    </nz-pagination>
+  </div>
 
   <nz-modal
     [(nzVisible)]="isModalVisible"

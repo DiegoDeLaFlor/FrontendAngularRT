@@ -11,8 +11,8 @@ private apiUrl = 'http://localhost:3000/divisions';
 
 constructor(private http: HttpClient) {}
 
-getDivisions(): Observable<DivisionsResponse> {
-    return this.http.get<DivisionsResponse>(this.apiUrl);
+getDivisions(page:number,limit:number): Observable<DivisionsResponse> {
+    return this.http.get<DivisionsResponse>(`${this.apiUrl}?page=${page}&limit=${limit}`);
 }
 
 createDivision(data: Division): Observable<Division> {
