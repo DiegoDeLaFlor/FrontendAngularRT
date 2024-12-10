@@ -68,26 +68,38 @@ export class DivisionTableComponent implements OnInit {
     this.divisionService.getDivisions(this.pagination.pageIndex, this.pagination.pageSize)
       .subscribe({
         next: (response) => {
-          this.divisions = response.results.map(division => ({
-            ...division,
-            subdivisions: response.results.filter(d => d.upperDivision?.id === division.id).length,
-            upperDivisionName: division.upperDivision?.name || null,
-          }));
+          this.divisions = response.results.map(division => {
+            const divisionWithSubdivisions = {
+              ...division,
+              subdivisions: 0,
+              upperDivisionName: division.upperDivision?.name || null
+            };
   
+            this.divisionService.getSubdivisions(division.id).subscribe({
+              next: (subdivisionResponse: any) => {
+                if (Array.isArray(subdivisionResponse)) {
+                  divisionWithSubdivisions.subdivisions = subdivisionResponse.length;
+                } else if (subdivisionResponse?.results && Array.isArray(subdivisionResponse.results)) {
+                  divisionWithSubdivisions.subdivisions = subdivisionResponse.results.length;
+                } else {
+                  console.warn(`Formato inesperado en la respuesta de subdivisiones para la división ${division.id}.`);
+                }
+              },
+              error: (error) => {
+                console.error(`Error al cargar subdivisiones para la división ${division.id}`, error);
+              }
+            });
+  
+            return divisionWithSubdivisions;
+          });
+          
           this.tableData = [...this.divisions];
           
           this.pagination.pageIndex = response.page;
           this.pagination.pageSize = response.limit;
           this.total = response.total;
-  
-          console.log('Pagination Debug:', {
-            pageIndex: this.pagination.pageIndex,
-            pageSize: this.pagination.pageSize,
-            total: this.total
-          });
-  
+
           this.loading = false;
-          
         },
         error: (error) => {
           console.error("Error al cargar divisiones", error);
@@ -115,8 +127,8 @@ export class DivisionTableComponent implements OnInit {
 
   saveDivision() {
     const formData = this.divisionForm.value;
-    formData.level = Math.floor(Math.random() * 10) + 1; // Nivel entre 1 y 10
-    formData.collaborators = Math.floor(Math.random() * 10) + 1; // Colaboradores entre 1 y 10
+    formData.level = Math.floor(Math.random() * 10) + 1;
+    formData.collaborators = Math.floor(Math.random() * 10) + 1;
     console.log('Form Data:', formData);
     if (this.isEditing && this.currentEditingId) {
       this.divisionService.updateDivision(this.currentEditingId, formData).subscribe(() => {
@@ -129,6 +141,10 @@ export class DivisionTableComponent implements OnInit {
         this.closeModal();
       });
     }
+  }
+
+  editDivision(division: DivisionWithSubdivisions) {
+    this.openModal(true, division);
   }
 
   deleteDivision(id: number) {
