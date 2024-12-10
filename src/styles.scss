@@ -13,24 +13,36 @@ body {
 }
 
 .page-header {
-    padding: 24px;
+    padding: 15px 40px 20px 40px;
     background: #fff;
-    box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    height: 80px;
+    top: 54px;
 }
 
 .content-container {
-    padding: 24px;
-    background: #fff;
+    padding: 10px 10px 10px 10px;
     min-height: 280px;
 }
 
 .table-operations {
     margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
     .ant-input-affix-wrapper {
-        width: 300px;
+        width: 213px;
     }
 }
+.ant-tabs-nav-list {
+    height: 30px;
+}
 
-.table-striped-rows tr:nth-child(2n) td {
-    background-color: #fafafa;
+.table-striped-rows {
+    .ant-table-tbody > tr:nth-child(odd) {
+        background-color: #ffff;
+    }
+    .ant-table {
+        border-radius: 8px;
+        overflow: hidden; 
+    }
 }

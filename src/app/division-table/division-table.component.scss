@@ -1,14 +1,89 @@
 .app-layout {
     min-height: 100vh;
 }
+
 .logo {
     color: white;
     font-size: 20px;
     padding: 0 24px;
 }
+
+.page-name{
+    font-size: 16px; 
+    font-weight: 600; 
+    width: 145px; 
+    height: 17px; 
+}
+
 nz-header {
     background: #1890ff;
     padding: 0;
     display: flex;
     align-items: center;
+}
+
+button {
+    margin-right: 8px;
+    background: #b4b4b4;
+    border: none;
+    border-radius: 5px;
+    width: 20px;
+    height: 20px;
+    color: white;
+}
+
+button:hover {
+    background: #40a9ff;
+    cursor: pointer;
+}
+
+.table-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 24px;
+    margin-bottom: 26px;
+    margin-top: -10px;
+    button{
+        width: 28px;
+        height: 28px;
+        margin-left: 4px;
+        margin-right: 4px;
+        background: #1890ff; 
+        border: none;
+    }
+}
+
+.table-footer {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;       
+    margin-top: -16px;
+    .total-collaborators {
+        font-size: 13px;
+        color: #979797;
+    }
+}
+
+.table-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    margin-bottom: 16px;
+    .page-name {
+        font-size: 16px;
+        font-weight: 600;
+        width: 145px;
+        height: 17px;
+    }
+}
+
+.page-header {
+    display: flex;
+    flex-direction: column;
+    .page-links {
+        margin-top: -34px;
+        color: #A6A6A6;
+    }
 }

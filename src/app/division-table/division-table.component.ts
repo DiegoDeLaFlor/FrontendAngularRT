@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DivisionService } from '../services/division.service';	
 import { DivisionWithSubdivisions } from '../models/division.model';
 import { CommonModule } from '@angular/common';
@@ -10,7 +10,8 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzPaginationModule } from 'ng-zorro-antd/pagination';
-
+import { ChangeDetectorRef } from '@angular/core';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
 @Component({
   selector: 'app-division-table',
   standalone: true,
@@ -24,7 +25,8 @@ import { NzPaginationModule } from 'ng-zorro-antd/pagination';
     NzModalModule,
     NzFormModule,
     NzSelectModule,
-    NzPaginationModule
+    NzPaginationModule,
+    NzTabsModule
   ],
   templateUrl: './division-table.component.html',
   styleUrls: ['./division-table.component.scss'],
@@ -38,16 +40,20 @@ export class DivisionTableComponent implements OnInit {
   divisionForm: FormGroup;
   currentEditingId: number | null = null;
   searchValue = '';
+  setOfCheckedId = new Set<number>();
+  checked = false;
+  indeterminate = false;
   sortMap = new Map<string, 'ascend' | 'descend' | null>();
   pagination = {
+    pageIndex: 1,
     pageSize: 10,
-    pageIndex: 1
   };
+  total = 0;
 
-  constructor(private divisionService: DivisionService, private fb: FormBuilder) {
+  constructor(private divisionService: DivisionService, private fb: FormBuilder, private cdr: ChangeDetectorRef) {
     this.divisionForm = this.fb.group({
-      name: [''],
-      upperDivisionId: [null],
+      name: ['', Validators.required],
+      upperDivisionId: [null, Validators.required],
       collaborators: [0],
       ambassadorName: [''],
     });
@@ -59,15 +65,47 @@ export class DivisionTableComponent implements OnInit {
 
   loadDivisions() {
     this.loading = true;
-    this.divisionService.getDivisions().subscribe((data) => {
-      this.divisions = data.map((division) => ({
-        ...division,
-        subdivisions: data.filter((d) => d.upperDivisionId === division.id).length,
-        upperDivisionName: data.find((d) => d.id === division.upperDivisionId)?.name || null,
-      }));
-      this.tableData = [...this.divisions];
-      this.loading = false;
-    });
+    this.divisionService.getDivisions(this.pagination.pageIndex, this.pagination.pageSize)
+      .subscribe({
+        next: (response) => {
+          this.divisions = response.results.map(division => {
+            const divisionWithSubdivisions = {
+              ...division,
+              subdivisions: 0,
+              upperDivisionName: division.upperDivision?.name || null
+            };
+  
+            this.divisionService.getSubdivisions(division.id).subscribe({
+              next: (subdivisionResponse: any) => {
+                if (Array.isArray(subdivisionResponse)) {
+                  divisionWithSubdivisions.subdivisions = subdivisionResponse.length;
+                } else if (subdivisionResponse?.results && Array.isArray(subdivisionResponse.results)) {
+                  divisionWithSubdivisions.subdivisions = subdivisionResponse.results.length;
+                } else {
+                  console.warn(`Formato inesperado en la respuesta de subdivisiones para la división ${division.id}.`);
+                }
+              },
+              error: (error) => {
+                console.error(`Error al cargar subdivisiones para la división ${division.id}`, error);
+              }
+            });
+  
+            return divisionWithSubdivisions;
+          });
+          
+          this.tableData = [...this.divisions];
+          
+          this.pagination.pageIndex = response.page;
+          this.pagination.pageSize = response.limit;
+          this.total = response.total;
+
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error("Error al cargar divisiones", error);
+          this.loading = false;
+        }
+      });
   }
 
   openModal(isEditing = false, division: any = null) {
@@ -89,6 +127,9 @@ export class DivisionTableComponent implements OnInit {
 
   saveDivision() {
     const formData = this.divisionForm.value;
+    formData.level = Math.floor(Math.random() * 10) + 1;
+    formData.collaborators = Math.floor(Math.random() * 10) + 1;
+    console.log('Form Data:', formData);
     if (this.isEditing && this.currentEditingId) {
       this.divisionService.updateDivision(this.currentEditingId, formData).subscribe(() => {
         this.loadDivisions();
@@ -102,6 +143,10 @@ export class DivisionTableComponent implements OnInit {
     }
   }
 
+  editDivision(division: DivisionWithSubdivisions) {
+    this.openModal(true, division);
+  }
+
   deleteDivision(id: number) {
     if (confirm('¿Está seguro de que desea eliminar esta división?')) {
       this.divisionService.deleteDivision(id).subscribe(() => {
@@ -109,6 +154,7 @@ export class DivisionTableComponent implements OnInit {
       });
     }
   }
+
   search() {
     if (!this.searchValue) {
       this.tableData = [...this.divisions]; 
@@ -123,21 +169,46 @@ export class DivisionTableComponent implements OnInit {
       );
     });
   }
+
   reset() {
     this.searchValue = '';
     this.search();
   }
-  onQueryParamsChange(params: any): void {
-    const { pageSize, pageIndex } = params;
-    this.pagination = { pageSize, pageIndex };
+
+  onQueryParamsChange(params: { pageIndex: number; pageSize: number }): void {
+    this.pagination.pageIndex = params.pageIndex;
+    this.pagination.pageSize = params.pageSize;
+    this.loadDivisions();
   }
 
   onSort(sort: any): void {
-      //console.log(sort);
         if(sort.value === null){
             this.sortMap.delete(sort.key);
         }else{
             this.sortMap.set(sort.key, sort.value);
         }
+  }
+ // selector
+  onItemChecked(id: number, checked: boolean): void {
+    this.updateCheckedSet(id, checked);
+    this.refreshCheckedStatus();
+  }
+
+  onAllChecked(value: boolean): void {
+    this.divisions.forEach(item => this.updateCheckedSet(item.id, value));
+    this.refreshCheckedStatus();
+  }
+
+  refreshCheckedStatus(): void {
+    this.checked = this.divisions.every(item => this.setOfCheckedId.has(item.id));
+    this.indeterminate = this.divisions.some(item => this.setOfCheckedId.has(item.id)) && !this.checked;
+  }
+  
+  updateCheckedSet(id: number, checked: boolean): void {
+    if (checked) {
+      this.setOfCheckedId.add(id);
+    } else {
+      this.setOfCheckedId.delete(id);
+    }
   }
 }
