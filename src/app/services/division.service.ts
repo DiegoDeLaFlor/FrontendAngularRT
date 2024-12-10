@@ -7,7 +7,7 @@ import { Division, DivisionPayload, DivisionsResponse } from '../models/division
 providedIn: 'root',
 })
 export class DivisionService {
-private apiUrl = 'http://localhost:3000/divisions';
+private apiUrl = 'https://backendnestjs-production.up.railway.app/divisions';
 
 constructor(private http: HttpClient) {}
 
